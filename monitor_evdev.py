@@ -112,7 +112,7 @@ batt_shdn = int(battery['BATT_SHUTDOWN_VOLT'])
 BUTTONS = [LEFT, RIGHT, DOWN, UP, BUTTON_A, BUTTON_B,
            BUTTON_X, BUTTON_Y, BUTTON_L1, BUTTON_R1, SELECT, START, QUICKSAVE]
 
-HOTKEYS = [LEFT, RIGHT, DOWN, UP, BUTTON_A, QUICKSAVE]
+HOTKEYS = [LEFT, RIGHT, DOWN, UP, BUTTON_A, START, QUICKSAVE]
 
 BOUNCE_TIME = 0.03  # Debounce time in seconds
 
@@ -567,6 +567,10 @@ def checkKeyInputPowerSaving():
         elif not gpio.input(QUICKSAVE):
             device.emit(KEYS[QUICKLOAD], 1)
             time.sleep(2)
+            device.syn()
+        elif not gpio.input(START):  # for when Start+Select just doesn't cut it
+            device.emit(uinput.KEY_ESC,1)
+            time.sleep(0.5)
             device.syn()
 
 
