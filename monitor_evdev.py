@@ -86,6 +86,7 @@ START = int(keys['START'])
 HOTKEY = int(keys['HOTKEY'])
 QUICKSAVE = int(keys['QUICKSAVE'])
 QUICKLOAD = 99  # Probably not the cleanest way to do this, but we're pretending like quickload is GPIO pin 99
+ESCAPE = 99  # lol, above
 
 if config.has_option("GENERAL", "DEBUG"):
     logging.basicConfig(filename=bin_dir + '/osd.log', level=logging.DEBUG,
@@ -166,6 +167,7 @@ else:
         RIGHT: uinput.KEY_RIGHT,  # Analog right
         QUICKSAVE: uinput.KEY_F2,  # Quick save key
         QUICKLOAD: uinput.KEY_F4,  # Quick load key
+        ESCAPE: uinput.KEY_ESC
     }
 
 # Global Variables
