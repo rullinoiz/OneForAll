@@ -86,7 +86,6 @@ START = int(keys['START'])
 HOTKEY = int(keys['HOTKEY'])
 QUICKSAVE = int(keys['QUICKSAVE'])
 QUICKLOAD = 99  # Probably not the cleanest way to do this, but we're pretending like quickload is GPIO pin 99
-ESCAPE = 99  # lol, above
 
 if config.has_option("GENERAL", "DEBUG"):
     logging.basicConfig(filename=bin_dir + '/osd.log', level=logging.DEBUG,
@@ -167,7 +166,7 @@ else:
         RIGHT: uinput.KEY_RIGHT,  # Analog right
         QUICKSAVE: uinput.KEY_F2,  # Quick save key
         QUICKLOAD: uinput.KEY_F4,  # Quick load key
-        ESCAPE: uinput.KEY_ESC
+        ESCAPE: uinput.KEY_ESC  # dang
     }
 
 # Global Variables
@@ -209,7 +208,7 @@ else:
 if JOYSTICK_DISABLED == 'False':
     device = uinput.Device(KEYS.values(), name="OneForAll-GP", version=0x3)
 else:
-    device = uinput.Device(KEYS.values(), name="OneForAll", version=0x3)
+    device = uinput.Device(KEYS.values(), name="mintyPad", version=0x3)
 
 time.sleep(1)
 
@@ -522,20 +521,6 @@ def volumeDown():
     os.system("amixer sset -q 'PCM' " + str(volume) + "%")
 
 
-def inputReading():
-    global volume
-    global wifi
-    global info
-    global volt
-    global bat
-    global charge
-    global joystick
-    while (1):
-        if joystick == True:
-            checkJoystickInput()
-        time.sleep(.05)
-
-
 def checkKeyInputPowerSaving():
     global info
     global wifi
@@ -560,9 +545,6 @@ def checkKeyInputPowerSaving():
         elif not gpio.input(LEFT):
             wifi = readModeWifi(True)
             time.sleep(0.5)
-        elif not gpio.input(RIGHT):
-            joystick = not joystick
-            time.sleep(0.5)
         elif not gpio.input(BUTTON_A):
             bluetooth = readModeBluetooth(True)
             time.sleep(0.5)
@@ -573,29 +555,8 @@ def checkKeyInputPowerSaving():
         elif not gpio.input(START):  # for when Start+Select just doesn't cut it
             device.emit(uinput.KEY_ESC,1)
             time.sleep(0.5)
+            device.emit(uinput.KEY_ESC,0)
             device.syn()
-
-
-def checkJoystickInput():
-    an1 = adc.read_adc(2, gain=2 / 3)
-    an0 = adc.read_adc(1, gain=2 / 3)
-
-    logging.debug("X: {} | Y: {}".format(an0, an1))
-    logging.debug("Above: {} | Below: {}".format((VREF / 2 + DZONE), (VREF / 2 - DZONE)))
-
-    # Check and apply joystick states
-    if (an0 > (VREF / 2 + DZONE)) or (an0 < (VREF / 2 - DZONE)):
-        val = an0 - 100 - 200 * (an0 < VREF / 2 - DZONE) + 200 * (an0 > VREF / 2 + DZONE)
-        device.emit(uinput.ABS_X, val)
-    else:
-        # Center the sticks if within deadzone
-        device.emit(uinput.ABS_X, VREF / 2)
-    if (an1 > (VREF / 2 + DZONE)) or (an1 < (VREF / 2 - DZONE)):
-        valy = an1 + 100 - 200 * (an1 < VREF / 2 - DZONE) + 200 * (an1 > VREF / 2 + DZONE)
-        device.emit(uinput.ABS_Y, valy)
-    else:
-        # Center the sticks if within deadzone
-        device.emit(uinput.ABS_Y, VREF / 2)
 
 
 def exit_gracefully(signum=None, frame=None):
@@ -612,9 +573,6 @@ volume = readVolumeLevel()
 
 wifi = readModeWifi()
 bluetooth = bluetooth = readModeBluetooth()
-
-if JOYSTICK_DISABLED == 'False':
-    inputReadingThread = thread.start_new_thread(inputReading, ())
 
 try:
     while 1:
